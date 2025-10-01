@@ -1,17 +1,27 @@
 use std::env;
 use std::fs;
+use std::process;
+use std::error::Error;
+use minigrep::search;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
 
-    let config = Config::new(&args);
+    let config = Config::build(&args).unwrap_or_else(|err| {
+        println!("Problem parsing arguments: {err}");
+        process::exit(1);
+    });
 
     println!("\nUsing query {} in file {}\n", config.query, config.file_path);
 
-    let contents = fs::read_to_string(config.file_path)
-        .expect("Should have been able to read the file");
+    if let Err(e) = run(config) {
+        println!("Application error: {e}");
+        process::exit(1);
+    }
 
-    println!("With text:\n{}\n", contents);
+    // let contents = fs::read_to_string(config.file_path)
+    //     .expect("Should have been able to read the file");
+    // println!("With text:\n{}\n", contents);
 }
 
 struct Config {
@@ -20,10 +30,25 @@ struct Config {
 }
 
 impl Config {
-    fn new(args: &[String]) -> Config {
+    // The function will return a Config instance if Ok, and a string if error
+    fn build(args: &[String]) -> Result<Config, &'static str> {
+        if args.len() < 3 {
+            return Err("not enough aruments");
+        }
+
         let query = args[1].clone();
         let file_path = args[2].clone();
 
-        Config { query, file_path }
+        Ok(Config { query, file_path })
     }
+}
+
+fn run(config: Config) -> Result<(), Box<dyn Error>> {
+    let contents = fs::read_to_string(config.file_path)?;
+
+    for line in search(&config.query, &contents) {
+        println!("{line}");
+    }
+
+    Ok(())
 }
