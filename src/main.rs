@@ -1,8 +1,8 @@
+use minigrep::search;
 use std::env;
+use std::error::Error;
 use std::fs;
 use std::process;
-use std::error::Error;
-use minigrep::search;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -12,7 +12,10 @@ fn main() {
         process::exit(1);
     });
 
-    println!("\nUsing query {} in file {}\n", config.query, config.file_path);
+    println!(
+        "\nUsing query {} in file {}\n",
+        config.query, config.file_path
+    );
 
     if let Err(e) = run(config) {
         println!("Application error: {e}");
@@ -33,7 +36,7 @@ impl Config {
     // The function will return a Config instance if Ok, and a string if error
     fn build(args: &[String]) -> Result<Config, &'static str> {
         if args.len() < 3 {
-            return Err("not enough aruments");
+            return Err("not enough arguments");
         }
 
         let query = args[1].clone();
